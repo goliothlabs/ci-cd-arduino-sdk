@@ -2,14 +2,18 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Golioth.h>
+#include <Update.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 
 #include "settings.h"
 
-#ifndef VERSION
-#define VERSION "0.0.0-local"
+#ifndef RAW_VERSION
+#define RAW_VERSION local
 #endif
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+#define VERSION STRINGIFY(RAW_VERSION)
 
 int status = WL_IDLE_STATUS;
 
@@ -18,6 +22,41 @@ GoliothClient* client = GoliothClient::getInstance();
 
 unsigned long lastMillis = 0;
 unsigned long counter = 0;
+
+void onDownloadArtifact(String pkg, String version, uint8_t* buf,
+                        size_t buf_size, int current, int total) {
+  Serial.print("Downloading " + pkg + " " + version + " " + String(current) +
+               "/" + String(total) + " ");
+  Serial.print(buf_size);
+  Serial.println(" bytes");
+  if (current == 0) {
+    if (pkg == "main") {
+      if (!Update.begin(total)) {
+        Serial.println("Not enough space to begin OTA");
+      }
+    }
+  }
+  if (buf_size) {
+    if (pkg == "main") {
+      Update.write(buf, buf_size);
+    }
+  }
+  if (current >= total) {
+    if (pkg == "main") {
+      if (Update.end()) {
+        Serial.println("Update complete");
+        if (Update.isFinished()) {
+          Serial.println("Update successfully completed. Rebooting.");
+          ESP.restart();
+        } else {
+          Serial.println("Update not finished? Something went wrong!");
+        }
+      } else {
+        Serial.println("Error Occurred. Error #: " + String(Update.getError()));
+      }
+    }
+  }
+}
 
 void connect() {
   String wifissid = getWifiSSID();
@@ -68,6 +107,15 @@ void connect() {
 
   client->onHello([](String name) { Serial.println(name); });
   client->listenHello();
+  client->onDesiredVersionChanged([](String pkg, String version, String hash) {
+    Serial.println("New version - " + pkg + " " + version + " " + hash);
+    if (pkg == "main" && version != VERSION) {
+      Serial.println("Update available");
+      client->downloadArtifact(pkg.c_str(), version.c_str());
+    }
+  });
+  client->onDownloadArtifact(onDownloadArtifact);
+  client->listenDesiredVersion();
 }
 
 void setup() {
