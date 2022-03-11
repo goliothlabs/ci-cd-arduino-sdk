@@ -146,6 +146,7 @@ void loop() {
     lastMillis = millis();
     counter++;
     client->setLightDBStateAtPath("/counter", String(counter).c_str());
+    client->setLightDBStateAtPath("/new-counter", String(counter).c_str());
     lastMillis = millis();
   }
 }
