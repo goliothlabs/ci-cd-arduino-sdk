@@ -108,7 +108,7 @@ void connect() {
   client->onHello([](String name) { Serial.println(name); });
   client->listenHello();
   client->onDesiredVersionChanged([](String pkg, String version, String hash) {
-    Serial.println("New version - " + pkg + " " + version + " " + hash);
+    Serial.println("Desired version - " + pkg + " " + version + " " + hash);
     if (pkg == "main" && version != VERSION) {
       Serial.println("Update available");
       client->downloadArtifact(pkg.c_str(), version.c_str());
@@ -146,7 +146,7 @@ void loop() {
     lastMillis = millis();
     counter++;
     client->setLightDBStateAtPath("/counter", String(counter).c_str());
-    client->setLightDBStateAtPath("/new-counter", String(counter).c_str());
+    client->setLightDBStateAtPath("/another-counter", String(counter).c_str());
     lastMillis = millis();
   }
 }
