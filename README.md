@@ -5,7 +5,7 @@ On this demo, we show how to use Github Actions to build your device firmware us
 - [Article with more details](https://blog.golioth.io/using-github-actions-and-golioth-to-automatically-deploy-iot-firmware/).
 - [Video with demo](https://www.youtube.com/watch?v=FZinwXH0O1M).
 
-You can see more details on the CI/CD workflow for Github Actions, that is available on [release.yaml](./.github/release.yaml).
+You can see more details on the CI/CD workflow for Github Actions, that is available on [release.yaml](./.github/workflows/release.yaml).
 
 To work properly you have to set up some Github Actions variables/secrets:
 
